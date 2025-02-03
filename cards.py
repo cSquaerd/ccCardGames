@@ -76,6 +76,9 @@ class Card:
 	def canPlacePatience(self, other : "Card") -> bool:
 		return other.rank - self.rank == 1 and other.getColor() != self.getColor()
 
+	def canPlaceFoundation(self, other : "Card") -> bool:
+		return self.rank - other.rank == 1 and other.suit == self.suit
+
 def colorCardString(card : Card) -> str:
 		PREFIX = "\x1B[107;"
 		MIDFIX = "m "
@@ -88,12 +91,31 @@ def colorCardString(card : Card) -> str:
 
 		return PREFIX + colorTranslator[card.getColor()] + MIDFIX + str(card) + SUFFIX
 
-class Tableau:
-	def __init__(self, cards : list = []):
-		self.cards = cards
+class Foundation:
+	def __init__(self):
+		self.cards = []
 
 	def isEmpty(self) -> bool:
 		return len(self.cards) == 0
+	
+	def getTopCard(self) -> Card:
+		if self.isEmpty():
+			return None
+	
+		return self.cards[-1]
+
+	def pushCard(self, card : Card):
+		self.cards.append(card)
+
+	def popCard(self) -> Card:
+		return self.cards.pop()
+
+	def __str__(self) -> str:
+		return colorCardString(self.getTopCard())
+
+class Tableau(Foundation):
+	def __init__(self, cards : list = []):
+		self.cards = cards
 
 	def getStackIndex(self) -> int:
 		if self.isEmpty():
