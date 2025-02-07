@@ -61,7 +61,7 @@ class Card:
 			self.suit = None
 
 	def __str__(self) -> str:
-		return str(self.rank) + str(self.suit)
+		return "{: <2s}{:s}".format(str(self.rank), str(self.suit))
 
 	def __repr__(self) -> str:
 		return self.__str__()
@@ -74,10 +74,10 @@ class Card:
 		)
 	
 	def canPlacePatience(self, other : "Card") -> bool:
-		return other.rank - self.rank == 1 and other.getColor() != self.getColor()
+		return other is None or (other.rank - self.rank == 1 and other.getColor() != self.getColor())
 
 	def canPlaceFoundation(self, other : "Card") -> bool:
-		return self.rank - other.rank == 1 and other.suit == self.suit
+		return (self.rank == Rank.ACE and other is None) or (self.rank - other.rank == 1 and other.suit == self.suit)
 
 def colorCardString(card : Card) -> str:
 		PREFIX = "\x1B[107;"
@@ -88,6 +88,8 @@ def colorCardString(card : Card) -> str:
 			"RED": "91",
 			"BLACK": "30"
 		}
+		if card is None:
+			return PREFIX + "30" + MIDFIX + "[-]" + SUFFIX
 
 		return PREFIX + colorTranslator[card.getColor()] + MIDFIX + str(card) + SUFFIX
 
@@ -110,13 +112,13 @@ class Foundation:
 	def popCard(self) -> Card:
 		return self.cards.pop()
 
+	def reset(self):
+		self.cards = []
+
 	def __str__(self) -> str:
 		return colorCardString(self.getTopCard())
 
 class Tableau(Foundation):
-	def __init__(self, cards : list = []):
-		self.cards = cards
-
 	def getStackIndex(self) -> int:
 		if self.isEmpty():
 			return -1
@@ -138,5 +140,5 @@ class Tableau(Foundation):
 		return len(self.cards) - self.getStackIndex()
 
 	def __str__(self) -> str:
-		return '\n'.join(map(lambda c : colorCardString(c), self.cards))
+		return ''.join(map(lambda c : colorCardString(c), self.cards))
 
