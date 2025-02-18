@@ -1,10 +1,60 @@
 from cards import Suit, Card, Foundation, Tableau, colorCardString
+from enum import Enum
 import random
 
 NUM_FOUNDATIONS = 4
 NUM_FREECELLS = 4
 NUM_TABLEAUS = 8
 NUM_CARDS = 52
+
+class Target(Enum):
+	TABLEAU = 'T'
+	FREECELL = 'F'
+	FOUNDATION = 'D'
+
+class Move:
+	def __init__(self, targetChar : str, id : str):
+		self.target = Target(targetChar)
+		self.id = id
+
+	def __str__(self) -> str:
+		return "{:s}:{:s}".format(self.target.name, self.id)
+
+	def __repr__(self) -> str:
+		return str(self)
+
+class SuperMove(Move):
+	def __init__(self, targetChar : str, id : str, stackSize : int):
+		super().__init__(targetChar, id)
+		self.size = stackSize
+
+	def __str__(self) -> str:
+		return "{:s}:{:s},{:d}".format(self.target.name, self.id, self.size)
+
+def decodeMoveString(m : str) -> tuple:
+	try:
+		source, destination = m.upper().split(';')
+	except ValueError:
+		return (None, None)
+
+	# Move strings must be present for both source and destination targets
+	if len(source) == 0 or len(destination) == 0:
+		return (None, None)
+
+	# Foundation targets must use letters for IDs, while others must use numbers for IDs
+	elif (source[0] == Target.FOUNDATION.value and not source[1].isalpha()) \
+		or (destination[0] == Target.FOUNDATION.value and not destination[1].isalpha()) \
+		or (source[0] != Target.FOUNDATION.value and source[1].isalpha()) \
+		or (destination[0] != Target.FOUNDATION.value and destination[1].isalpha()):
+		return (None, None)
+
+	if ',' in source:
+		if source[0] != Target.TABLEAU.value:
+			return (None, None)
+
+		return (SuperMove(source[0], source[1], int(source.split(',')[1])), Move(destination[0], destination[1]))
+
+	return (Move(source[0], source[1]), Move(destination[0], destination[1]))
 
 class Freecell:
 	def __init__(self):
@@ -53,4 +103,6 @@ class Freecell:
 			n += 1
 
 		self.initialized = True
+
+	
 
