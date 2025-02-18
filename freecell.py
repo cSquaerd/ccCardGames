@@ -23,6 +23,12 @@ class Move:
 	def __repr__(self) -> str:
 		return str(self)
 
+	def getID(self):
+		if self.target == Target.FOUNDATION:
+			return self.id
+
+		return int(self.id)
+
 class SuperMove(Move):
 	def __init__(self, targetChar : str, id : str, stackSize : int):
 		super().__init__(targetChar, id)
@@ -104,5 +110,39 @@ class Freecell:
 
 		self.initialized = True
 
-	
+	def canMove(self, moveString : str) -> bool:
+		source, destination = decodeMoveString(moveString)
+
+		if source is None or destination is None:
+			return False
+
+		if isinstance(source, SuperMove):
+			# Determine if the stack is valid by the indicated size
+			actualStackSize = self.tableaus[source.getID() - 1].getStackSize()
+			if source.size > actualStackSize:
+				return False
+			elif destination.target != Target.TABLEAU:
+				return False
+
+			movingCard = self.tableaus[source.getID() - 1].cards[-source.size]
+
+		else:
+			if source.target == Target.TABLEAU:
+				movingCard = self.tableaus[source.getID() - 1].getTopCard()
+			elif source.target == Target.FREECELL:
+				movingCard = self.freecells[source.getID() - 1]
+			else:
+				movingCard = self.foundations[Card.suitTranslator[source.getID()]].getTopCard()
+
+		if destination.target == Target.TABLEAU:
+			landingCard = self.tableaus[destination.getID() - 1].getTopCard()
+		elif destination.target == Target.FREECELL:
+			landingCard = self.freecells[destination.getID() - 1]
+		else:
+			suit = Card.suitTranslator[destination.getID()]
+			landingCard = self.foundations[suit].getTopCard()
+
+			return movingCard.suit == suit and movingCard.canPlaceFoundation(landingCard)
+
+		return movingCard.canPlacePatience(landingCard)
 
